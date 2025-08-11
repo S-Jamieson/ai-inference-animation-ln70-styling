@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="AI Chat Interaction Visualisation">
+    <meta property="og:description" content="A simple animation showing how AI chat models process conversations without memory">
+    <meta property="og:image" content="https://cdn.simulationtheory.ai/gasset/?asset=img&prompt=chat%20interface%20with%20neural%20network%20dark%20theme&w=64&h=64">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="https://cdn.simulationtheory.ai/gasset/?asset=img&prompt=chat%20icon%20simple%20neon&w=32&h=32">
+    <title>AI Chat Interaction Visualisation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
+            background-color: #ffffff;
+            color: #252525;
+        }
+        
+        .neural-node {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px rgba(97, 122, 144, 0.5);
+        }
+        
+        .neural-connection {
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+        
+        .data-packet {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #617A90;
+            box-shadow: 0 0 15px rgba(97, 122, 144, 0.8);
+            z-index: 100;
+            transition: all 0.5s ease;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-message {
+            background-color: #617A90;
+            color: #ffffff;
+            margin-left: auto;
+            border-top-right-radius: 4px;
+        }
+        
+        .ai-message {
+            background-color: #f5f5f5;
+            color: #252525;
+            margin-right: auto;
+            border-top-left-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .explanation-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            margin: 0 auto;
+            border: 1px solid #617A90;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .message-highlight {
+            transition: all 0.3s ease;
+        }
+        
+        .chat-container-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .message-packet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #617A90;
+            box-shadow: 0 0 10px #617A90;
+            z-index: 50;
+            transition: all 0.5s ease;
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 15px rgba(97, 122, 144, 0.8);
+        }
+        
+        .neural-container {
+            background: radial-gradient(circle at center, #e8f0f5 0%, #ffffff 70%);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .example-btn {
+            transition: all 0.2s ease;
+            border: 1px solid #617A90;
+        }
+        
+        .example-btn:hover {
+            background-color: #617A90;
+            color: #ffffff;
+        }
+        
+        .instruction-text {
+            font-size: 0.9rem;
+            color: #666666;
+            font-style: italic;
+        }
+        
+        .highlight-text {
+            color: #617A90;
+            font-weight: 500;
+        }
+        
+        @keyframes data-flow {
+            0% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.2) translateY(-3px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        
+        .data-flow {
+            animation: data-flow 1s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-2" style="color: #617A90;">How AI Chat Models Process Conversations</h1>
+        <p class="text-center mb-4" style="color: #252525;">Click one of the example questions below or type your own message and press Send to see the animation in action</p>
+        
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Chat UI Section -->
+            <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-4 h-[500px] flex flex-col border border-gray-300 chat-container-wrapper">
+                <div class="text-center font-bold text-lg mb-2 pb-2 border-b border-gray-300" style="color: #617A90;">Chat Interface</div>
+                <div id="chat-container" class="flex-grow overflow-y-auto mb-4 p-2 relative">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button class="example-btn text-xs px-2 py-1 rounded-md bg-white" style="color: #617A90;" data-message="How do you remember this chat?">How do you remember this chat?</button>
+                    <button class="example-btn text-xs px-2 py-1 rounded-md bg-white" style="color: #617A90;" data-message="How is a chat different to LLM training?">How is chat different to training?</button>
+                    <button class="example-btn text-xs px-2 py-1 rounded-md bg-white" style="color: #617A90;" data-message="Do I need to be careful with free AI services training on my data?">Data privacy concerns?</button>
+                </div>
+                <div class="flex gap-2">
+                    <input id="user-input" type="text" placeholder="Type a message..." class="flex-grow bg-white border border-gray-300 text-gray-800 rounded-lg px-4 py-2 focus:outline-none focus:ring-2" style="focus:ring-color: #617A90;" />
+                    <button id="send-button" class="text-white px-4 py-2 rounded-lg transition-colors" style="background-color: #617A90;" onmouseover="this.style.backgroundColor='#4a5f73'" onmouseout="this.style.backgroundColor='#617A90'">
+                        Send
+                    </button>
+                </div>
+            </div>
+            
+            <!-- AI Model Visualization Section -->
+            <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-4 h-[500px] relative border border-gray-300">
+                <div class="text-center font-bold text-lg mb-2 pb-2 border-b border-gray-300" style="color: #617A90;">AI Model</div>
+                <div id="neural-network" class="w-full h-[400px] relative neural-container">
+                    <!-- Neural network nodes and connections will be generated here -->
+                </div>
+                <div id="ai-status" class="text-center text-sm absolute bottom-4 left-0 right-0" style="color: #617A90;">
+                    Waiting for input...
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <button id="restart-button" class="text-white px-6 py-2 rounded-lg transition-colors" style="background-color: #666666;" onmouseover="this.style.backgroundColor='#555555'" onmouseout="this.style.backgroundColor='#666666'">
+                Restart Animation
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            const chatContainer = document.getElementById('chat-container');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const neuralNetwork = document.getElementById('neural-network');
+            const aiStatus = document.getElementById('ai-status');
+            const restartButton = document.getElementById('restart-button');
+            const exampleButtons = document.querySelectorAll('.example-btn');
+            
+            let chatHistory = [];
+            let isProcessing = false;
+            let nodes = [];
+            let connections = [];
+            let currentScenario = 0;
+            
+            // Pre-defined chat scenarios
+            const chatScenarios = [
+                {
+                    initial: [
+                        { role: 'ai', content: 'Hello! How can I help you today?' }
+                    ],
+                    userPrompts: [
+                        "How do you remember this chat?",
+                        "How is a chat different to LLM training?",
+                        "Do I need to be careful with free AI services training on my data?"
+                    ],
+                    aiResponses: [
+                        "I don't actually remember our conversation. Each time you send a message, your device sends me the entire conversation history along with your new message. After I respond, I completely reset - I retain no memory of our interaction. This is why the full context must be sent each time.",
+                        "Chat interactions and LLM training are fundamentally different. In a chat, I process your messages without storing anything - the conversation is sent to me with each message. Training, however, is a separate process where data is used to adjust the model's parameters. Your chat doesn't modify my underlying model unless specifically collected for future training.",
+                        "Yes, it's wise to be cautious. While the chat process itself doesn't add to an LLM's memory, free services often store conversations for potential future training. Always check the terms of service to see how your data might be used. UNE tools like Cogniti and Madgwick are vetted to meet legal requirements for data privacy and don't train on user data. More information is available at UNE's data privacy page."
+                    ]
+                },
+                {
+                    initial: [
+                        { role: 'ai', content: 'Hi there! What would you like to know about today?' }
+                    ],
+                    userPrompts: [
+                        "How do you remember this chat?",
+                        "How is a chat different to LLM training?",
+                        "Do I need to be careful with free AI services training on my data?"
+                    ],
+                    aiResponses: [
+                        "I don't actually remember our conversation. Each time you send a message, your device sends me the entire conversation history along with your new message. After I respond, I completely reset - I retain no memory of our interaction. This is why the full context must be sent each time.",
+                        "Chat interactions and LLM training are fundamentally different. In a chat, I process your messages without storing anything - the conversation is sent to me with each message. Training, however, is a separate process where data is used to adjust the model's parameters. Your chat doesn't modify my underlying model unless specifically collected for future training.",
+                        "Yes, it's wise to be cautious. While the chat process itself doesn't add to an LLM's memory, free services often store conversations for potential future training. Always check the terms of service to see how your data might be used. UNE tools like Cogniti and Madgwick are vetted to meet legal requirements for data privacy and don't train on user data. More information is available at UNE's data privacy page."
+                    ]
+                }
+            ];
+            
+            // Initial chat messages
+            const initialMessages = chatScenarios[currentScenario].initial;
+            
+            // Create neural network visualization
+            function createNeuralNetwork() {
+                neuralNetwork.innerHTML = '';
+                nodes = [];
+                connections = [];
+                
+                // Create 3 layers of nodes with random variations
+                const layers = [6, 10, 6];
+                const layerSpacing = neuralNetwork.offsetWidth / (layers.length + 1);
+                
+                // Create nodes
+                for (let l = 0; l < layers.length; l++) {
+                    const layerNodes = [];
+                    const nodeCount = layers[l];
+                    const verticalSpacing = neuralNetwork.offsetHeight / (nodeCount + 1);
+                    
+                    for (let n = 0; n < nodeCount; n++) {
+                        const node = document.createElement('div');
+                        node.className = 'neural-node absolute rounded-full';
+                        node.style.backgroundColor = '#d1d5db';
+                        
+                        // Add slight random positioning for more organic look
+                        const randomOffset = Math.random() * 10 - 5;
+                        const size = 16 + Math.random() * 8;
+                        
+                        node.style.width = `${size}px`;
+                        node.style.height = `${size}px`;
+                        node.style.left = `${(l + 1) * layerSpacing - size/2 + randomOffset}px`;
+                        node.style.top = `${(n + 1) * verticalSpacing - size/2 + randomOffset}px`;
+                        
+                        if (Math.random() > 0.7) {
+                            node.classList.add('float');
+                        }
+                        
+                        neuralNetwork.appendChild(node);
+                        layerNodes.push(node);
+                    }
+                    nodes.push(layerNodes);
+                }
+                
+                // Create connections between nodes
+                for (let l = 0; l < layers.length - 1; l++) {
+                    for (let n1 = 0; n1 < nodes[l].length; n1++) {
+                        for (let n2 = 0; n2 < nodes[l + 1].length; n2++) {
+                            // Add randomness to connections - don't connect every node
+                            if (Math.random() > 0.3) {
+                                const connection = document.createElement('div');
+                                connection.className = 'neural-connection absolute';
+                                connection.style.backgroundColor = '#9ca3af';
+                                
+                                const node1 = nodes[l][n1];
+                                const node2 = nodes[l + 1][n2];
+                                
+                                const width1 = parseFloat(node1.style.width);
+                                const width2 = parseFloat(node2.style.width);
+                                
+                                const x1 = parseFloat(node1.style.left) + width1/2;
+                                const y1 = parseFloat(node1.style.top) + width1/2;
+                                const x2 = parseFloat(node2.style.left) + width2/2;
+                                const y2 = parseFloat(node2.style.top) + width2/2;
+                                
+                                const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                                
+                                connection.style.width = `${length}px`;
+                                connection.style.height = '1px';
+                                connection.style.left = `${x1}px`;
+                                connection.style.top = `${y1}px`;
+                                connection.style.transformOrigin = '0 0';
+                                connection.style.transform = `rotate(${angle}deg)`;
+                                
+                                neuralNetwork.appendChild(connection);
+                                connections.push(connection);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Add a message to the chat
+            function addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${role === 'user' ? 'user-message' : 'ai-message'} message-highlight`;
+                messageDiv.textContent = content;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                chatHistory.push({ role, content });
+            }
+            
+            // Initialize chat with initial messages
+            function initializeChat() {
+                chatContainer.innerHTML = '';
+                chatHistory = [];
+                initialMessages.forEach(msg => {
+                    addMessage(msg.role, msg.content);
+                });
+            }
+            
+            // Create visual representation of message packets
+            function createMessagePackets() {
+                const packets = [];
+                const messages = chatContainer.querySelectorAll('.chat-message');
+                
+                // Clear any existing packets
+                const existingPackets = document.querySelectorAll('.message-packet');
+                existingPackets.forEach(p => p.remove());
+                
+                // Create a packet for each message
+                messages.forEach((msg, index) => {
+                    const rect = msg.getBoundingClientRect();
+                    const containerRect = chatContainer.getBoundingClientRect();
+                    
+                    const packet = document.createElement('div');
+                    packet.className = 'message-packet';
+                    packet.style.left = `${rect.right - containerRect.left - 6}px`;
+                    packet.style.top = `${rect.top - containerRect.top + rect.height / 2}px`;
+                    packet.style.opacity = '0';
+                    
+                    // Different colors for user vs AI messages
+                    if (msg.classList.contains('user-message')) {
+                        packet.style.backgroundColor = '#617A90';
+                    } else {
+                        packet.style.backgroundColor = '#8fa3b3';
+                    }
+                    
+                    chatContainer.appendChild(packet);
+                    packets.push(packet);
+                });
+                
+                return packets;
+            }
+            
+            // Animate message packets gathering
+            function animateMessageGathering(onComplete) {
+                const packets = createMessagePackets();
+                const containerRect = chatContainer.getBoundingClientRect();
+                const gatherPoint = {
+                    x: containerRect.width - 20,
+                    y: containerRect.height - 20
+                };
+                
+                // Highlight all messages to show context gathering
+                const allMessages = chatContainer.querySelectorAll('.chat-message');
+                allMessages.forEach(msg => {
+                    msg.style.boxShadow = '0 0 8px rgba(97, 122, 144, 0.8)';
+                });
+                
+                // Animate packets to gather point
+                packets.forEach((packet, index) => {
+                    setTimeout(() => {
+                        packet.style.opacity = '1';
+                        packet.classList.add('data-flow');
+                        
+                        setTimeout(() => {
+                            packet.style.left = `${gatherPoint.x}px`;
+                            packet.style.top = `${gatherPoint.y}px`;
+                            packet.classList.add('glow-effect');
+                            
+                            // Last packet animation completed
+                            if (index === packets.length - 1) {
+                                setTimeout(() => {
+                                    // Create a larger packet that contains all messages
+                                    // Size increases with conversation length - more dramatic growth
+                                    const packetSize = Math.min(100, 20 + (packets.length * 10));
+                                    
+                                    const combinedPacket = document.createElement('div');
+                                    combinedPacket.className = 'data-packet data-flow';
+                                    combinedPacket.style.width = `${packetSize}px`;
+                                    combinedPacket.style.height = `${packetSize}px`;
+                                    combinedPacket.style.backgroundColor = '#617A90';
+                                    combinedPacket.style.left = `${containerRect.right - packetSize/2}px`;
+                                    combinedPacket.style.top = `${containerRect.bottom - packetSize/2}px`;
+                                    document.body.appendChild(combinedPacket);
+                                    
+                                    // Remove individual packets
+                                    packets.forEach(p => p.remove());
+                                    
+                                    // Reset message highlights
+                                    allMessages.forEach(msg => {
+                                        msg.style.boxShadow = 'none';
+                                    });
+                                    
+                                    if (onComplete) onComplete(combinedPacket);
+                                }, 500);
+                            }
+                        }, 100);
+                    }, index * 150);
+                });
+            }
+            
+            // Activate neural network with unique patterns based on input
+            function activateNeuralNetwork(inputText) {
+                // Generate a hash from the input text to create consistent but unique patterns
+                let hash = 0;
+                for (let i = 0; i < inputText.length; i++) {
+                    hash = ((hash << 5) - hash) + inputText.charCodeAt(i);
+                    hash |= 0;
+                }
+                
+                // Use the hash to determine activation patterns
+                const activationSeed = Math.abs(hash);
+                
+                // Create more dynamic and unique activation patterns
+                const baseHue = (activationSeed % 120) + 180; // Range from blue to purple
+                const patternType = activationSeed % 4; // Different pattern types
+                
+                // Activate connections with varying colors based on input
+                connections.forEach((connection, index) => {
+                    // Create variations based on the hash and connection index
+                    const hueOffset = ((index * 7) % 40) - 20;
+                    const hue = (baseHue + hueOffset) % 360;
+                    const delay = (index * 17 + activationSeed) % 800;
+                    
+                    setTimeout(() => {
+                        connection.style.backgroundColor = `hsl(${hue}, 60%, 50%)`;
+                        connection.style.height = '2px';
+                        connection.style.opacity = '0.8';
+                        
+                        // Add different patterns based on input
+                        if (patternType === 0) {
+                            // Pulsing pattern
+                            connection.style.transition = 'all 0.5s ease-in-out';
+                        } else if (patternType === 1) {
+                            // Wave pattern
+                            connection.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        } else if (patternType === 2) {
+                            // Burst pattern
+                            connection.style.transition = 'all 0.2s ease-out';
+                        } else {
+                            // Smooth pattern
+                            connection.style.transition = 'all 0.8s ease';
+                        }
+                    }, delay);
+                });
+                
+                // Activate nodes in a pattern based on the input
+                const nodeActivationOrder = [];
+                
+                // Create a unique activation sequence based on the hash
+                for (let l = 0; l < nodes.length; l++) {
+                    for (let n = 0; n < nodes[l].length; n++) {
+                        const activationTime = ((l * 100) + (n * 50) + (activationSeed % 300)) % 1200;
+                        const hueOffset = ((l * 30 + n * 10) % 60) - 30;
+                        
+                        nodeActivationOrder.push({
+                            node: nodes[l][n],
+                            time: activationTime,
+                            hue: (baseHue + hueOffset) % 360,
+                            scale: 1.2 + (((l + n) % 3) * 0.2) // Different scales for more variety
+                        });
+                    }
+                }
+                
+                // Sort by activation time
+                nodeActivationOrder.sort((a, b) => a.time - b.time);
+                
+                // Activate nodes in the calculated sequence
+                nodeActivationOrder.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.node.style.backgroundColor = `hsl(${item.hue}, 60%, 50%)`;
+                        item.node.style.transform = `scale(${item.scale})`;
+                        
+                        // Add different animation based on pattern type
+                        if (patternType === 0 || index % 4 === 0) {
+                            item.node.classList.add('pulse');
+                        } else if (patternType === 1 || index % 4 === 1) {
+                            item.node.classList.add('float');
+                        }
+                        
+                        // Add glow effect
+                        item.node.style.boxShadow = `0 0 15px hsl(${item.hue}, 60%, 50%)`;
+                    }, item.time);
+                });
+            }
+            
+            // Reset neural network
+            function resetNeuralNetwork() {
+                // Reset connections
+                connections.forEach(connection => {
+                    connection.style.backgroundColor = '#9ca3af';
+                    connection.style.height = '1px';
+                    connection.style.opacity = '0.6';
+                    connection.style.transition = 'all 0.3s ease';
+                });
+                
+                // Reset nodes
+                nodes.flat().forEach(node => {
+                    node.style.backgroundColor = '#d1d5db';
+                    node.style.transform = 'scale(1)';
+                    node.classList.remove('pulse');
+                    node.classList.remove('float');
+                    node.style.boxShadow = '0 0 8px rgba(97, 122, 144, 0.5)';
+                });
+            }
+            
+            // Process user message
+            function processUserMessage(message) {
+                if (isProcessing || !message.trim()) return;
+                isProcessing = true;
+                
+                // Add user message to chat
+                addMessage('user', message);
+                userInput.value = '';
+                
+                // Update AI status
+                aiStatus.textContent = 'Gathering conversation history...';
+                
+                // Animate message gathering and packet creation
+                animateMessageGathering((combinedPacket) => {
+                    // Update status
+                    aiStatus.textContent = 'Sending conversation to AI...';
+                    
+                    // Animate the combined packet to the neural network
+                    const neuralRect = neuralNetwork.getBoundingClientRect();
+                    setTimeout(() => {
+                        combinedPacket.style.transition = 'all 1.5s ease';
+                        combinedPacket.style.left = `${neuralRect.left + neuralRect.width / 2 - parseFloat(combinedPacket.style.width)/2}px`;
+                        combinedPacket.style.top = `${neuralRect.top + neuralRect.height / 2 - parseFloat(combinedPacket.style.height)/2}px`;
+                        
+                        setTimeout(() => {
+                            // Packet arrived at neural network
+                            combinedPacket.remove();
+                            
+                            // Activate neural network with unique pattern based on input
+                            aiStatus.textContent = 'Processing conversation...';
+                            activateNeuralNetwork(message);
+                            
+                            // Get pre-defined response
+                            setTimeout(() => {
+                                const currentPrompts = chatScenarios[currentScenario].userPrompts;
+                                const currentResponses = chatScenarios[currentScenario].aiResponses;
+                                
+                                let responseIndex = -1;
+                                for (let i = 0; i < currentPrompts.length; i++) {
+                                    if (message.toLowerCase().includes(currentPrompts[i].toLowerCase()) || 
+                                        currentPrompts[i].toLowerCase().includes(message.toLowerCase())) {
+                                        responseIndex = i;
+                                        break;
+                                    }
+                                }
+                                
+                                // Default response if no match
+                                let aiResponse = "I'm not sure how to respond to that. Try asking about how I remember conversations, how chat differs from training, or about data privacy in AI services.";
+                                
+                                // Use matched response if found
+                                if (responseIndex >= 0) {
+                                    aiResponse = currentResponses[responseIndex];
+                                }
+                                
+                                // Animate response from AI to UI
+                                aiStatus.textContent = 'Generating response...';
+                                
+                                // Create response packet
+                                const responsePacket = document.createElement('div');
+                                responsePacket.className = 'data-packet data-flow';
+                                responsePacket.style.backgroundColor = '#10b981';
+                                responsePacket.style.left = `${neuralRect.left + neuralRect.width / 2 - 10}px`;
+                                responsePacket.style.top = `${neuralRect.top + neuralRect.height / 2 - 10}px`;
+                                document.body.appendChild(responsePacket);
+                                
+                                setTimeout(() => {
+                                    aiStatus.textContent = 'Sending response...';
+                                    
+                                    // Animate packet to chat
+                                    const chatRect = chatContainer.getBoundingClientRect();
+                                    responsePacket.style.transition = 'all 1.5s ease';
+                                    responsePacket.style.left = `${chatRect.left + 20}px`;
+                                    responsePacket.style.top = `${chatRect.bottom - 20}px`;
+                                    
+                                    setTimeout(() => {
+                                        // Add AI response to chat
+                                        responsePacket.remove();
+                                        addMessage('ai', aiResponse);
+                                        
+                                        // Reset neural network to show no memory retention
+                                        resetNeuralNetwork();
+                                        aiStatus.textContent = 'Waiting for input...';
+                                        isProcessing = false;
+                                    }, 1500);
+                                }, 1000);
+                            }, 2000);
+                        }, 1500);
+                    }, 100);
+                });
+            }
+            
+            // Event listeners
+            sendButton.addEventListener('click', () => {
+                processUserMessage(userInput.value);
+            });
+            
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    processUserMessage(userInput.value);
+                }
+            });
+            
+            // Example message buttons
+            exampleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!isProcessing) {
+                        const message = button.getAttribute('data-message');
+                        userInput.value = message;
+                        processUserMessage(message);
+                    }
+                });
+            });
+            
+            restartButton.addEventListener('click', () => {
+                if (!isProcessing) {
+                    // Switch to next scenario
+                    currentScenario = (currentScenario + 1) % chatScenarios.length;
+                    initialMessages.length = 0;
+                    chatScenarios[currentScenario].initial.forEach(msg => {
+                        initialMessages.push(msg);
+                    });
+                    
+                    initializeChat();
+                    resetNeuralNetwork();
+                    aiStatus.textContent = 'Waiting for input...';
+                }
+            });
+            
+            // Pre-populate user input with first example
+            if (exampleButtons.length > 0) {
+                const firstExample = exampleButtons[0].getAttribute('data-message');
+                userInput.value = firstExample;
+                userInput.focus();
+            }
+            
+            // Initialize
+            createNeuralNetwork();
+            initializeChat();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (!isProcessing) {
+                    createNeuralNetwork();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
